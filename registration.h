@@ -2,10 +2,6 @@
 #define REGISTRATION_H
 
 #include <QWidget>
-#include <QDebug>
-#include <QtSql>
-#include <QFileInfo>
-#include <QMessageBox>
 
 namespace Ui {
 class registration;
@@ -19,15 +15,12 @@ public:
     ~registration();
 
 private slots:
-    void on_clearButton_clicked();
     void on_regButton_clicked();
+    void on_clearButton_clicked();
     void on_backButton_clicked();
 
 private:
     Ui::registration *ui;
-
-    QSqlDatabase myDB;
-
 };
 
 #endif // REGISTRATION_H
