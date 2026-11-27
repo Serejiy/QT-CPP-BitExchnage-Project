@@ -4,6 +4,16 @@ A desktop application in C++ and Qt that shows live cryptocurrency prices from t
 Binance API as candlestick charts. Users register, log in and trade with play money:
 every new account starts with 1000 USDT.
 
+## Screenshots
+
+Trading window right after a simulated buy of 0.002 BTC:
+
+![Trading window: price, candlestick chart, balances and order panel](screenshots/trading.png)
+
+| Start window | Login | Registration |
+|:---:|:---:|:---:|
+| ![Start window](screenshots/welcome.png) | ![Login form](screenshots/login.png) | ![Registration form](screenshots/registration.png) |
+
 ## Download (Windows)
 
 **[⬇ Download BitExchange.exe](https://github.com/Serejiy/QT-CPP-BitExchnage-Project/releases/latest/download/BitExchange.exe)**
