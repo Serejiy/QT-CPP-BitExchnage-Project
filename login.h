@@ -1,13 +1,7 @@
 #ifndef LOGIN_H
 #define LOGIN_H
 
-#include "welcomepage.h"
 #include <QWidget>
-#include <QDebug>
-#include <QtSql>
-#include <QSqlDatabase>
-#include <QFileInfo>
-#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,26 +13,17 @@ class login : public QWidget
 {
     Q_OBJECT
 
-signals:
-
-
 public:
     explicit login(QWidget *parent = nullptr);
     ~login();
 
 private slots:
-    void on_pushButton_2_clicked();
-
-    void on_loginBtn_clicked();
-
-    void on_pushButton_3_clicked();
-
+    void on_loginBtn_clicked();     // "Login"
+    void on_pushButton_2_clicked(); // "Back"
+    void on_pushButton_3_clicked(); // "Clear"
 
 private:
     Ui::login *ui;
-    welcomepage *welcomePage;
-
-    QSqlDatabase myDB;
 };
 
-#endif
+#endif // LOGIN_H
