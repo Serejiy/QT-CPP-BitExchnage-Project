@@ -1,152 +1,62 @@
-#include <QDebug>
-#include <QCryptographicHash>
-#include <QMessageAuthenticationCode>
-#include <QUrlQuery>
-#include <QUrl>
+#include "binanceclient.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QUrl>
+#include <QUrlQuery>
 
-#include "binanceclient.h"
+// Binance's address for public market data (same data as api.binance.com)
+static const char *const API_URL = "https://data-api.binance.vision/api/v3";
 
-binanceClient::binanceClient(QByteArray apiKey, QByteArray secretKey, QObject* parent):
-    _apiKey(apiKey)
-    , _secretKey(secretKey)
+binanceClient::binanceClient(QObject *parent)
+    : QObject(parent)
+    , _network(new QNetworkAccessManager(this))
 {
-    _networkManagerPrice = new QNetworkAccessManager(this);
-    _networkManagerCandle = new QNetworkAccessManager(this);
-    _networkManagerSTime = new QNetworkAccessManager(this);
-
-    connect(_networkManagerPrice, &QNetworkAccessManager::finished,
-            this, &binanceClient::replyFinishedPrice, Qt::DirectConnection);
-    connect(_networkManagerCandle, &QNetworkAccessManager::finished,
-            this, &binanceClient::replyFinishedCandle, Qt::DirectConnection);
-    connect(_networkManagerSTime, &QNetworkAccessManager::finished,
-            this, &binanceClient::replyFinishedSTime, Qt::DirectConnection);
 }
 
-QByteArray binanceClient::getHMAC(const QString & message)
+void binanceClient::requestPrice(const QString &symbol)
 {
-    QUrl url(message);
-    return QMessageAuthenticationCode::hash(url.toEncoded(), _secretKey, QCryptographicHash::Sha256).toHex();
-}
+    QUrl url(QString(API_URL) + "/ticker/price");
+    QUrlQuery query;
+    query.addQueryItem("symbol", symbol);
+    url.setQuery(query);
 
-void binanceClient::getServerTime()
-{
-    QUrl url(QString(API_URL) + QString(TIME_V1));
-    QNetworkRequest netReq;
-    netReq.setSslConfiguration(QSslConfiguration::defaultConfiguration());
-    netReq.setUrl(url);
-    _networkManagerSTime->get(netReq);
-}
-
-void binanceClient::getAllPrices()
-{
-    QUrl url(QString(API_URL) + QString(PRICE_V1));
-    QNetworkRequest netReq;
-    netReq.setSslConfiguration(QSslConfiguration::defaultConfiguration());
-    netReq.setUrl(url);
-    qDebug() << url;
-}
-
-void binanceClient::getSymbolPrice(const QString &name)
-{
-    QUrl url(QString(API_URL) + QString(PRICE_V3) + QString("?symbol=") + name);
-    QNetworkRequest netReq;
-    netReq.setSslConfiguration(QSslConfiguration::defaultConfiguration());
-    netReq.setUrl(url);
-    _networkManagerPrice->get(netReq);
-}
-
-void binanceClient::candleSticks(const QString &name, qulonglong startTime)
-{
-    QUrl url(QString(API_URL) + QString(CANDLESTICK) + QString("?symbol=") + name + QString("&interval=1m&startTime=") + QString::number(startTime));
-    QNetworkRequest netReq;
-    netReq.setSslConfiguration(QSslConfiguration::defaultConfiguration());
-    netReq.setUrl(url);
-    _networkManagerCandle->get(netReq);
-}
-
-void binanceClient::replyFinishedPrice(QNetworkReply *reply)
-{
-    if (reply->error() != QNetworkReply::NoError)
-    {
-        qDebug() << reply->errorString();
+    QNetworkReply *reply = _network->get(QNetworkRequest(url));
+    // This lambda runs when the answer has arrived, e.g. {"symbol":"BTCUSDT","price":"91234.56"}
+    connect(reply, &QNetworkReply::finished, this, [this, reply, symbol]() {
         reply->deleteLater();
-        return;
-    }
-
-    QByteArray data = reply->readAll();
-    if(!data.isEmpty())
-    {
-        QJsonDocument jsondoc = QJsonDocument::fromJson(data);
-
-        if(!jsondoc.isNull())
-        {
-            if(jsondoc.isObject())
-            {
-                QJsonObject obj = jsondoc.object();
-                emit priceSignal(obj["price"].toString().toDouble());
-            }
-            else if(jsondoc.isArray())
-            {
-                foreach(QJsonValue element, jsondoc.array())
-                {
-                    QJsonObject node = element.toObject();
-                    if(node["symbol"].toString() == "ADAETH")
-                        qDebug() << node["symbol"].toString() << node["price"].toString().toDouble();
-                }
-            }
+        if (reply->error() != QNetworkReply::NoError) {
+            emit requestFailed(reply->errorString());
+            return;
         }
-    }
-
-    reply->deleteLater();
+        const QJsonObject json = QJsonDocument::fromJson(reply->readAll()).object();
+        const double price = json.value("price").toString().toDouble();
+        if (price > 0)
+            emit priceReceived(symbol, price);
+    });
 }
 
-void binanceClient::replyFinishedCandle(QNetworkReply *reply)
+void binanceClient::requestCandles(const QString &symbol, const QString &interval, int limit)
 {
-    if (reply->error() != QNetworkReply::NoError)
-    {
-        qDebug() << reply->errorString();
+    QUrl url(QString(API_URL) + "/klines");
+    QUrlQuery query;
+    query.addQueryItem("symbol", symbol);
+    query.addQueryItem("interval", interval);
+    query.addQueryItem("limit", QString::number(limit));
+    url.setQuery(query);
+
+    QNetworkReply *reply = _network->get(QNetworkRequest(url));
+    // Answer: an array of candles, each [openTime, open, high, low, close, volume, ...]
+    connect(reply, &QNetworkReply::finished, this, [this, reply, symbol]() {
         reply->deleteLater();
-        return;
-    }
-
-    QByteArray data = reply->readAll();
-    if(!data.isEmpty())
-    {
-        QJsonDocument jsondoc = QJsonDocument::fromJson(data);
-        if(!jsondoc.isNull())
-        {
-            if(jsondoc.isArray())
-            {
-                emit candleSticksSignal(jsondoc.array());
-            }
+        if (reply->error() != QNetworkReply::NoError) {
+            emit requestFailed(reply->errorString());
+            return;
         }
-    }
-
-    reply->deleteLater();
-}
-
-void binanceClient::replyFinishedSTime(QNetworkReply *reply)
-{
-    if (reply->error() != QNetworkReply::NoError)
-    {
-        qDebug() << reply->errorString();
-        reply->deleteLater();
-        return;
-    }
-
-    QByteArray data = reply->readAll();
-    QJsonDocument jsondoc = QJsonDocument::fromJson(data);
-    if(!jsondoc.isNull())
-    {
-        if(jsondoc.isObject())
-        {
-            QJsonObject obj = jsondoc.object();
-            emit serverTimeSignal(obj["serverTime"].toVariant().toULongLong());
-        }
-    }
-
-    reply->deleteLater();
+        const QJsonDocument json = QJsonDocument::fromJson(reply->readAll());
+        if (json.isArray())
+            emit candlesReceived(symbol, json.array());
+    });
 }
