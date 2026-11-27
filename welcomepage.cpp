@@ -1,13 +1,17 @@
 #include "welcomepage.h"
 #include "ui_welcomepage.h"
+
+#include "database.h"
 #include "login.h"
 #include "registration.h"
 
 welcomepage::welcomepage(QWidget *parent)
-    : QWidget(parent)
+    : QMainWindow(parent)
     , ui(new Ui::welcomepage)
 {
     ui->setupUi(this);
+    setAttribute(Qt::WA_DeleteOnClose);
+    ui->statusbar->showMessage("Database: " + Database::filePath());
 }
 
 welcomepage::~welcomepage()
@@ -17,16 +21,14 @@ welcomepage::~welcomepage()
 
 void welcomepage::on_login_clicked()
 {
-    login *loginPage = new login();
+    auto *loginPage = new login();
     loginPage->show();
     close();
 }
 
-
-
 void welcomepage::on_registration_clicked()
 {
-    registration *registrationPage = new registration();
+    auto *registrationPage = new registration();
     registrationPage->show();
     close();
 }

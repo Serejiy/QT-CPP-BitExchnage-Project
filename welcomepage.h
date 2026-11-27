@@ -9,7 +9,9 @@ class welcomepage;
 }
 QT_END_NAMESPACE
 
-class welcomepage : public QWidget
+// First window: choose Login or Registration.
+// A QMainWindow, so the status bar with the database path sits at the bottom.
+class welcomepage : public QMainWindow
 {
     Q_OBJECT
 
@@ -18,11 +20,11 @@ public:
     ~welcomepage();
 
 private slots:
-    void on_registration_clicked();
-
     void on_login_clicked();
+    void on_registration_clicked();
 
 private:
     Ui::welcomepage *ui;
 };
-#endif
+
+#endif // WELCOMEPAGE_H
