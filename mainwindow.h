@@ -44,11 +44,16 @@ private slots:
     void on_radioButton_5_clicked();   // DOGE
     void on_Buybtn_clicked();
     void on_Selbtn_clicked();
+    void on_Execbtn_clicked();
+    void on_QuantityLine_textChanged(const QString &text);
 
 private:
     QString symbol() const { return _currency + "USDT"; }  // e.g. "BTCUSDT"
     void setCurrency(const QString &currency);
     void setRange(const QString &interval, int limit);
+    void updateBalances();
+    void updateOrderValue();
+    double quantity() const;
 
     Ui::MainWindow *ui;
     binanceClient *_client;
@@ -64,6 +69,7 @@ private:
     QString _interval = "1m";    // one candle per minute ...
     int _limit = 60;             // ... 60 candles = the last hour
     double _currentPrice = 0.0;
+    bool _buying = true;         // Buy or Sell mode
 };
 
 #endif // MAINWINDOW_H
