@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     binanceclient.cpp \
     candlesticksview.cpp \
+    database.cpp \
     login.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -20,6 +21,7 @@ SOURCES += \
 HEADERS += \
     binanceclient.h \
     candlesticksview.h \
+    database.h \
     login.h \
     mainwindow.h \
     registration.h \
