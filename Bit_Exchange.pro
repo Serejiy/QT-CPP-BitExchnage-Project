@@ -33,6 +33,16 @@ FORMS += \
     registration.ui \
     welcomepage.ui
 
+# Windows: name of the .exe, program icon and version info (right click > Properties > Details)
+win32 {
+    TARGET = BitExchange
+    VERSION = 1.0.0
+    RC_ICONS = bitexchange.ico
+    QMAKE_TARGET_PRODUCT = BitExchange
+    QMAKE_TARGET_DESCRIPTION = BitExchange
+    QMAKE_TARGET_COPYRIGHT = "Serhii Ponomarenko"
+}
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
