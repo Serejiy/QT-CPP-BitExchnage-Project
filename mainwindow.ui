@@ -283,7 +283,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Traiding Account:</string>
+        <string>Trading Account:</string>
        </property>
       </widget>
       <widget class="QLabel" name="USDTlabel">
